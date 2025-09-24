@@ -55,7 +55,6 @@ web_modules/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
-*/__pycache__/
 
 # Optional REPL history
 .node_repl_history
@@ -128,9 +127,9 @@ venv/
 *.egg-info/
 build/
 dist/
+__pycache__/
 
 # Editor directories and files
-*/.vscode/*
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
