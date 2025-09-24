@@ -73,7 +73,13 @@ export default {
     return {
       question: '',
       messages: [],
-      loading: false
+      loading: false,
+      // 聊天历史的本地存储键名
+      chatHistoryKey: 'ai_chat_history',
+      // 请求缓存的本地存储键名
+      requestCacheKey: 'ai_request_cache',
+      // 请求缓存对象
+      requestCache: {}
     };
   },
   methods: {
@@ -96,6 +102,32 @@ export default {
         this.scrollToBottom();
       });
       
+      // 保存聊天历史
+      this.saveChatHistory();
+      
+      // 检查请求缓存
+      const cachedResponse = this.getCachedResponse(questionText);
+      if (cachedResponse) {
+        // 使用缓存的响应
+        setTimeout(() => {
+          const aiMessage = {
+            type: 'ai',
+            content: cachedResponse.answer,
+            context: cachedResponse.context || [],
+            timestamp: new Date()
+          };
+          this.messages.push(aiMessage);
+          this.loading = false;
+          this.saveChatHistory();
+          // 滚动到底部
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
+        }, 100); // 短暂延迟以模拟真实请求
+        return;
+      }
+      
+      // 缓存未命中，发送API请求
       axios.post('/api/ai/ask', { question: questionText })
         .then(res => {
           const aiMessage = {
@@ -105,6 +137,12 @@ export default {
             timestamp: new Date()
           };
           this.messages.push(aiMessage);
+          
+          // 缓存响应
+          this.cacheResponse(questionText, {
+            answer: res.data.answer,
+            context: res.data.context
+          });
         })
         .catch(error => {
           const errorMessage = {
@@ -116,11 +154,105 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+          // 保存聊天历史
+          this.saveChatHistory();
           // 滚动到底部
           this.$nextTick(() => {
             this.scrollToBottom();
           });
         });
+    },
+    
+    // 加载聊天历史
+    loadChatHistory() {
+      try {
+        const savedHistory = localStorage.getItem(this.chatHistoryKey);
+        if (savedHistory) {
+          this.messages = JSON.parse(savedHistory).map(msg => {
+            // 恢复Date对象
+            msg.timestamp = new Date(msg.timestamp);
+            return msg;
+          });
+        }
+      } catch (error) {
+        console.error('加载聊天历史失败:', error);
+      }
+    },
+    
+    // 保存聊天历史
+    saveChatHistory() {
+      try {
+        // 限制历史记录的最大条数，避免占用过多存储空间
+        const MAX_HISTORY = 100;
+        const historyToSave = this.messages.slice(-MAX_HISTORY);
+        localStorage.setItem(this.chatHistoryKey, JSON.stringify(historyToSave));
+      } catch (error) {
+        console.error('保存聊天历史失败:', error);
+      }
+    },
+    
+    // 加载请求缓存
+    loadRequestCache() {
+      try {
+        const savedCache = localStorage.getItem(this.requestCacheKey);
+        if (savedCache) {
+          this.requestCache = JSON.parse(savedCache);
+        }
+      } catch (error) {
+        console.error('加载请求缓存失败:', error);
+      }
+    },
+    
+    // 保存请求缓存
+    saveRequestCache() {
+      try {
+        // 限制缓存大小，避免占用过多存储空间
+        const MAX_CACHE_SIZE = 50;
+        const cacheKeys = Object.keys(this.requestCache);
+        if (cacheKeys.length > MAX_CACHE_SIZE) {
+          // 删除最早的缓存项
+          const keysToDelete = cacheKeys.slice(0, cacheKeys.length - MAX_CACHE_SIZE);
+          keysToDelete.forEach(key => {
+            delete this.requestCache[key];
+          });
+        }
+        localStorage.setItem(this.requestCacheKey, JSON.stringify(this.requestCache));
+      } catch (error) {
+        console.error('保存请求缓存失败:', error);
+      }
+    },
+    
+    // 获取缓存的响应
+    getCachedResponse(question) {
+      // 使用简单的文本相似性检查
+      const normalizedQuestion = this.normalizeText(question);
+      
+      for (const [cachedQuestion, response] of Object.entries(this.requestCache)) {
+        const normalizedCachedQuestion = this.normalizeText(cachedQuestion);
+        
+        // 如果问题相似度高（这里使用简单的包含关系），返回缓存的响应
+        if (normalizedQuestion.includes(normalizedCachedQuestion) || 
+            normalizedCachedQuestion.includes(normalizedQuestion)) {
+          return response;
+        }
+      }
+      
+      return null;
+    },
+    
+    // 缓存响应
+    cacheResponse(question, response) {
+      this.requestCache[question] = response;
+      this.saveRequestCache();
+    },
+    
+    // 文本规范化（用于缓存匹配）
+    normalizeText(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ') // 合并多余空格
+        .replace(/[,.?!，。？！]/g, ''); // 移除标点符号
     },
     scrollToBottom() {
       const chatHistory = this.$refs.chatHistory;
@@ -140,11 +272,22 @@ export default {
     }
   },
   mounted() {
+    // 加载聊天历史和请求缓存
+    this.loadChatHistory();
+    this.loadRequestCache();
+    
     // 监听窗口大小变化，调整聊天区域高度
     window.addEventListener('resize', this.scrollToBottom);
+    
+    // 滚动到底部
+    this.$nextTick(() => {
+      this.scrollToBottom();
+    });
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.scrollToBottom);
+    // 确保在组件卸载前保存聊天历史
+    this.saveChatHistory();
   }
 };
 </script>
