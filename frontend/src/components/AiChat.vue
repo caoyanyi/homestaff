@@ -34,8 +34,24 @@
             </div>
           </div>
           <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+            
+            <!-- 添加到知识库按钮 -->
+            <div v-if="message.type === 'ai' && isLoggedIn && !message.addedToKnowledgeBase" class="message-actions">
+              <button 
+                @click="addToKnowledgeBase(message, index)" 
+                :disabled="addingToKnowledgeBase"
+                class="add-to-knowledge-btn"
+              >
+                {{ addingToKnowledgeBase ? '添加中...' : '添加到知识库' }}
+              </button>
+            </div>
+            
+            <!-- 已添加到知识库的标记 -->
+            <div v-else-if="message.type === 'ai' && message.addedToKnowledgeBase" class="knowledge-added-tag">
+              ✅ 已添加到知识库
+            </div>
+          </div>
         </div>
-      </div>
       
       <div v-if="loading" class="loading-message">
         <div class="loading-spinner"></div>
@@ -79,7 +95,11 @@ export default {
       // 请求缓存的本地存储键名
       requestCacheKey: 'ai_request_cache',
       // 请求缓存对象
-      requestCache: {}
+      requestCache: {},
+      // 用户登录状态
+      isLoggedIn: false,
+      // 添加到知识库的加载状态
+      addingToKnowledgeBase: false
     };
   },
   methods: {
@@ -163,6 +183,50 @@ export default {
         });
     },
     
+    // 检查用户登录状态
+    checkLoginStatus() {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        this.isLoggedIn = true;
+      }
+    },
+
+    // 将问答对添加到知识库
+    addToKnowledgeBase(message, index) {
+      if (!this.isLoggedIn || this.addingToKnowledgeBase) return;
+
+      this.addingToKnowledgeBase = true;
+
+      // 查找对应的用户问题
+      const userQuestionIndex = index - 1;
+      if (userQuestionIndex < 0 || this.messages[userQuestionIndex].type !== 'user') {
+        alert('找不到对应的用户问题');
+        this.addingToKnowledgeBase = false;
+        return;
+      }
+
+      const userQuestion = this.messages[userQuestionIndex].content;
+      const aiAnswer = message.content;
+
+      axios.post('/api/ai/optimize-and-add', {
+        question: userQuestion,
+        answer: aiAnswer
+      })
+        .then(res => {
+          alert('成功添加到知识库！\n标题：' + res.data.optimized.title);
+          // 可以在这里添加一个标记，表示该回答已添加到知识库
+          this.$set(this.messages[index], 'addedToKnowledgeBase', true);
+        })
+        .catch(error => {
+          console.error('添加到知识库失败:', error);
+          alert('添加到知识库失败：' + (error.response?.data?.message || '未知错误'));
+        })
+        .finally(() => {
+          this.addingToKnowledgeBase = false;
+        });
+    },
+
     // 加载聊天历史
     loadChatHistory() {
       try {
@@ -275,6 +339,9 @@ export default {
     // 加载聊天历史和请求缓存
     this.loadChatHistory();
     this.loadRequestCache();
+    
+    // 检查用户登录状态
+    this.checkLoginStatus();
     
     // 监听窗口大小变化，调整聊天区域高度
     window.addEventListener('resize', this.scrollToBottom);
@@ -637,24 +704,55 @@ export default {
   box-shadow: none;
 }
 
-@media (max-width: 768px) {
-  .message-content {
-    max-width: 85%;
-  }
-  
-  .user-question,
-  .ai-answer {
-    padding: 12px 15px;
-    font-size: 14px;
-  }
-  
-  .chat-input-area {
-    flex-direction: column;
-  }
-  
-  .send-button {
-    width: 100%;
-    padding: 12px;
-  }
-}
+    .message-actions {
+      margin-top: 10px;
+    }
+
+    .add-to-knowledge-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .add-to-knowledge-btn:hover:not(:disabled) {
+      background: #45a049;
+    }
+
+    .add-to-knowledge-btn:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .knowledge-added-tag {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #4CAF50;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .message-content {
+        max-width: 85%;
+      }
+      
+      .user-question,
+      .ai-answer {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+      
+      .chat-input-area {
+        flex-direction: column;
+      }
+      
+      .send-button {
+        width: 100%;
+        padding: 12px;
+      }
+    }
 </style>

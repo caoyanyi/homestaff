@@ -30,7 +30,7 @@
     </nav>
     
     <main class="app-main" v-if="!showLogin && !showChangePassword">
-      <AiChat />
+      <AiChat v-if="view !== 'manage'"/>
       <KnowledgeManager v-if="isAuthenticated && view === 'manage'" />
     </main>
     
