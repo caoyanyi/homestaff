@@ -38,7 +38,7 @@ cd ai_vector_server
 python3 -m venv venv
 source venv/bin/activate   # Windows 用 venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn server:app --host 0.0.0.0 --port 9000
+python server.py --port 9000
 ```
 
 该服务提供两个 API：
@@ -71,6 +71,15 @@ AI_API_URL=https://api.openai.com/v1
 ```bash
 php artisan key:generate
 php artisan migrate
+```
+
+初始化管理员用户：
+```bash
+php artisan user:init --name=admin --email=admin@qq.com --password=admin123
+```
+
+启动服务：
+```bash
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
@@ -125,6 +134,12 @@ A: 检查是否已调用 `add-doc` 将知识入库，并确保 Python 服务在�
 
 Q: Vue 请求 500 或 404？
 A: 看 Laravel 后端日志 (`storage/logs/laravel.log`) 确认路由和参数是否正确。
+
+Q: 如何修改默认管理员密码？
+A: 登录系统后，点击右上角用户名旁边的"修改密码"按钮进行修改。
+
+Q: 如何创建多个管理员账户？
+A: 使用 `php artisan user:init` 命令并指定不同的邮箱和用户名。
 
 ---
 
