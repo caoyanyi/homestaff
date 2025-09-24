@@ -66,6 +66,7 @@
 
 <script>
 import axios from 'axios';
+import { marked } from 'marked';
 
 export default {
   data() {
@@ -134,8 +135,8 @@ export default {
       return `${hours}:${minutes}`;
     },
     formatAnswer(text) {
-      // 将换行符转换为 <br> 标签
-      return text.replace(/\n/g, '<br>');
+      // 解析Markdown格式内容为HTML
+      return marked.parse(text);
     }
   },
   mounted() {
@@ -269,8 +270,100 @@ export default {
 }
 
 .answer-text {
-  margin-bottom: 10px;
-}
+      margin-bottom: 10px;
+    }
+    
+    /* Markdown样式 */
+    .answer-text h1, .answer-text h2, .answer-text h3, 
+    .answer-text h4, .answer-text h5, .answer-text h6 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: 600;
+    }
+    
+    .answer-text h1 { font-size: 1.8rem; }
+    .answer-text h2 { font-size: 1.5rem; }
+    .answer-text h3 { font-size: 1.3rem; }
+    .answer-text h4 { font-size: 1.1rem; }
+    .answer-text h5 { font-size: 1rem; }
+    .answer-text h6 { font-size: 0.9rem; color: #666; }
+    
+    .answer-text p {
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    
+    .answer-text ul, .answer-text ol {
+      margin-bottom: 12px;
+      padding-left: 25px;
+    }
+    
+    .answer-text li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    
+    .answer-text ul li:before {
+      content: "•";
+      margin-right: 8px;
+      color: #667eea;
+    }
+    
+    .answer-text strong {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .answer-text em {
+      font-style: italic;
+      color: #666;
+    }
+    
+    .answer-text code {
+      background: #f5f5f5;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+    
+    .answer-text pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    .answer-text pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border-radius: 0;
+    }
+    
+    .answer-text blockquote {
+      border-left: 4px solid #667eea;
+      padding-left: 15px;
+      color: #666;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+    
+    .answer-text a {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    
+    .answer-text a:hover {
+      color: #5a67d8;
+      text-decoration: underline;
+    }
 
 .context-info {
   margin-top: 15px;
