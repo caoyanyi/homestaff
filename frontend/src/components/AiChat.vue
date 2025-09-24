@@ -64,6 +64,7 @@
         v-model="question"
         @keydown.ctrl.enter="ask"
         @keydown.meta.enter="ask"
+        @input="handleInput"
         placeholder="请输入您的问题...
 (按住 Ctrl+Enter 快速发送)"
         rows="3"
@@ -324,6 +325,12 @@ export default {
         chatHistory.scrollTop = chatHistory.scrollHeight;
       }
     },
+    // 处理输入事件，自动滚动到底部
+    handleInput() {
+      this.$nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
     formatTime(date) {
       const d = new Date(date);
       const hours = d.getHours().toString().padStart(2, '0');
@@ -363,7 +370,8 @@ export default {
 .ai-chat {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  position: relative;
 }
 
 .chat-title {
@@ -380,7 +388,6 @@ export default {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  margin-bottom: 20px;
   scroll-behavior: smooth;
 }
 
@@ -655,6 +662,13 @@ export default {
   display: flex;
   gap: 10px;
   align-items: flex-end;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #e1e5e9;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .chat-input-area textarea {
@@ -748,6 +762,10 @@ export default {
       
       .chat-input-area {
         flex-direction: column;
+      }
+      
+      .chat-input-area textarea {
+        width: 100%;
       }
       
       .send-button {
