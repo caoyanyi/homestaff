@@ -1,6 +1,8 @@
 <template>
   <div class="ai-chat">
-    <h2 class="chat-title">家政 AI 问答</h2>
+    <div class="chat-header">
+      <h2 class="chat-title">家政 AI 问答</h2>
+    </div>
     
     <div class="chat-history" ref="chatHistory">
       <div v-if="messages.length === 0" class="empty-state">
@@ -368,26 +370,33 @@ export default {
 
 <style scoped>
 .ai-chat {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  position: relative;
-}
-
-.chat-title {
-  text-align: center;
-  color: #333;
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  font-weight: 600;
-}
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    background-color: #f5f5f5;
+  }
+  
+  .chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+  }
+  
+  .chat-title {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+  }
 
 .chat-history {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  padding: 15px;
+  background: #f5f5f5;
   scroll-behavior: smooth;
 }
 
@@ -439,24 +448,26 @@ export default {
 
 .user-message {
   justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .ai-message {
   justify-content: flex-start;
+  margin-bottom: 12px;
 }
 
 .message-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #e1e5e9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-  margin: 0 10px;
-}
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e1e5e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin: 0 8px;
+  }
 
 .user-message .message-avatar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -464,26 +475,28 @@ export default {
 }
 
 .message-content {
-  max-width: 70%;
+  max-width: 75%;
 }
 
 .user-question {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 15px 20px;
+  padding: 12px 16px;
   border-radius: 18px 18px 4px 18px;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
+  word-wrap: break-word;
 }
 
 .ai-answer {
   background: white;
-  padding: 15px 20px;
+  padding: 12px 16px;
   border-radius: 18px 18px 18px 4px;
   border: 1px solid #e1e5e9;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
   color: #333;
+  word-wrap: break-word;
 }
 
 .answer-text {
@@ -659,33 +672,40 @@ export default {
 }
 
 .chat-input-area {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  padding: 20px;
-  background: white;
-  border-top: 1px solid #e1e5e9;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-}
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #e1e5e9;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  }
 
 .chat-input-area textarea {
   flex: 1;
-  padding: 12px 15px;
+  min-height: 50px;
+  max-height: 150px;
+  padding: 12px 16px;
   border: 2px solid #e1e5e9;
   border-radius: 8px;
   font-size: 15px;
   resize: none;
   font-family: inherit;
-  transition: border-color 0.3s ease;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
+  background: white;
+  touch-action: manipulation;
 }
 
 .chat-input-area textarea:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
 }
 
 .chat-input-area textarea:disabled {
@@ -699,20 +719,31 @@ export default {
   color: white;
   border: none;
   border-radius: 8px;
+  cursor: pointer;
   font-size: 15px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
   height: fit-content;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .send-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .send-button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -750,27 +781,70 @@ export default {
     }
 
     @media (max-width: 768px) {
+      /* 修复移动端的消息气泡样式和间距 */
+      .message-avatar {
+        width: 30px;
+        height: 30px;
+        margin: 0 6px;
+        font-size: 1rem;
+      }
+      
       .message-content {
         max-width: 85%;
       }
       
       .user-question,
       .ai-answer {
-        padding: 12px 15px;
-        font-size: 14px;
+        padding: 10px 14px;
+        font-size: 13px;
       }
       
+      /* 调整移动端导航栏 */
+      .chat-header {
+        padding: 12px 16px;
+      }
+      
+      .chat-title {
+        font-size: 1.2rem;
+      }
+      
+      /* 确保输入区域在小屏幕上更好显示 */
       .chat-input-area {
         flex-direction: column;
+        padding: 10px 12px;
+        gap: 8px;
       }
       
       .chat-input-area textarea {
         width: 100%;
+        font-size: 14px;
+        padding: 10px 14px;
+        min-height: 44px;
       }
       
       .send-button {
         width: 100%;
         padding: 12px;
+        font-size: 14px;
+        min-height: 44px;
+      }
+      
+      .chat-history {
+        padding: 10px;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* 确保内容适应极小型屏幕 */
+      @media (max-width: 360px) {
+        .message-content {
+          max-width: 90%;
+        }
+        
+        .user-question,
+        .ai-answer {
+          padding: 8px 12px;
+          font-size: 12px;
+        }
       }
     }
 </style>

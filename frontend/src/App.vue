@@ -106,13 +106,13 @@ export default {
 .app-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 20px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-radius: 0 0 16px 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .app-header h1 {
@@ -181,20 +181,24 @@ export default {
 .main-nav {
   display: flex;
   gap: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
   justify-content: center;
 }
 
 .main-nav button {
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: white;
   border: 2px solid #e1e5e9;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   transition: all 0.3s ease;
   color: #333;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .main-nav button:hover {
@@ -212,39 +216,87 @@ export default {
 .app-main {
   background: white;
   border-radius: 12px;
-  padding: 30px;
+  padding: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  min-height: 60vh;
+  min-height: calc(100vh - 240px);
 }
 
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     text-align: center;
+    padding: 12px 16px;
+    margin-bottom: 10px;
   }
   
   .app-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+    margin: 0;
   }
   
   .header-actions {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .user-info {
+    font-size: 12px;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+  
+  .header-actions .change-password-button,
+  .header-actions .logout-button {
+    padding: 3px 6px;
+    font-size: 11px;
+    min-height: 24px;
   }
   
   .main-nav {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 8px;
   }
   
   .main-nav button {
-    width: 100%;
-    max-width: 300px;
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 40px;
   }
   
   .app-main {
-    padding: 20px;
+    padding: 15px;
+    min-height: calc(100vh - 220px);
+  }
+  
+  /* 针对极小型屏幕的额外优化 */
+  @media (max-width: 360px) {
+    .app-header {
+      padding: 10px 12px;
+    }
+    
+    .app-header h1 {
+      font-size: 1.2rem;
+    }
+    
+    .main-nav {
+      flex-direction: column;
+    }
+    
+    .main-nav button {
+      min-width: auto;
+    }
+    
+    .app-main {
+      padding: 12px;
+    }
   }
 }
 </style>
