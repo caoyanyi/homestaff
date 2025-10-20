@@ -16,6 +16,8 @@ Route::post('/ai/optimize-and-add', [AIController::class, 'optimizeAndAddToKnowl
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/knowledge', [AdminKnowledgeController::class, 'index']);
     Route::post('/admin/knowledge', [AdminKnowledgeController::class, 'store']);
+    Route::post('/admin/knowledge/update', [AdminKnowledgeController::class, 'update']);
+    Route::post('/admin/knowledge/delete', [AdminKnowledgeController::class, 'delete']);
     
     // 用户相关路由
     Route::get('/user', [UserController::class, 'getUserInfo']);
