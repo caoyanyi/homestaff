@@ -34,13 +34,35 @@ class AIController extends Controller
             ])->json();
         $answer = $openaiResponse['choices'][0]['message']['content'] ?? '无法生成回答';
 
+        // 清理回答内容，移除可能导致微信消息格式问题的字符
+        $answer = $this->cleanupAnswer($answer);
+
+        // 存储聊天日志 - 允许外部传入用户ID（如微信用户）
+        $userId = $request->input('user_id', ($request->user() ? $request->user()->id : 0));
         AIChatLog::create([
-            'user_id' => $request->user() ? $request->user()->id : 0,
+            'user_id' => $userId,
             'question' => $question,
             'answer' => $answer
         ]);
 
         return ['question' => $question, 'answer' => $answer, 'context_used' => $related];
+    }
+    
+    /**
+     * 清理回答内容，确保适合微信消息格式
+     */
+    protected function cleanupAnswer($answer)
+    {
+        // 移除过多的空行
+        $answer = preg_replace('/\n{3,}/', "\n\n", $answer);
+        
+        // 移除Markdown格式（如果有），微信消息不支持Markdown
+        $answer = preg_replace('/[#*`]/', '', $answer);
+        
+        // 替换特殊字符，确保微信消息格式正确
+        $answer = str_replace(['\r\n', '\r'], "\n", $answer);
+        
+        return trim($answer);
     }
 
     /**

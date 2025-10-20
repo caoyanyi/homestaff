@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WeChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -31,4 +32,12 @@ Route::post('/login', function (Request $request) {
         'token' => $token,
         'user' => $user
     ]);
+});
+
+// 微信公众号相关路由
+Route::prefix('wechat')->group(function () {
+    // 微信服务器验证接口
+    Route::get('/', [WeChatController::class, 'validateServer']);
+    // 微信消息处理接口
+    Route::post('/', [WeChatController::class, 'handleMessage']);
 });
