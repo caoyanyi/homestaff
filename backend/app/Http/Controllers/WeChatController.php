@@ -7,6 +7,7 @@ use App\Models\WeChatUser;
 use App\Models\AIChatLog;
 use App\Http\Controllers\AIController;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WeChatController extends Controller
@@ -15,47 +16,75 @@ class WeChatController extends Controller
     protected $appId;
     protected $appSecret;
     protected $token;
-    protected $encodingAESKey;
     
     public function __construct()
     {
+        // 从环境变量获取配置（明文模式只需要appId和token）
         $this->appId = env('WECHAT_APPID');
-        $this->appSecret = env('WECHAT_APPSECRET');
-        $this->token = env('WECHAT_TOKEN');
-        $this->encodingAESKey = env('WECHAT_ENCODING_AES_KEY');
+        $this->token = env('WECHAT_TOKEN', 'default_token');
+        
+        // 验证必要的配置
+        if (!$this->appId || !$this->token) {
+            throw new \Exception('WeChat configuration missing: WECHAT_APPID and WECHAT_TOKEN are required');
+        }
+        
+        Log::info('WeChat Controller initialized in plain text mode', [
+            'app_id_last_8' => substr($this->appId, -8)
+        ]);
     }
     
     /**
-     * 微信公众号验证接口
+     * 验证服务器
+     * 使用明文模式验证
      */
     public function validateServer(Request $request)
     {
+        $signature = $request->input('signature');
         $timestamp = $request->input('timestamp');
         $nonce = $request->input('nonce');
         $token = $this->token;
-        $signature = $request->input('signature');
         $echostr = $request->input('echostr');
         
-        // 验证签名
-        $tmpArr = [$token, $timestamp, $nonce];
+        // 明文模式验证
+        $tmpArr = array($token, $timestamp, $nonce);
         sort($tmpArr, SORT_STRING);
         $tmpStr = implode($tmpArr);
-        $tmpStr = sha1($tmpStr);
+        $hashCode = sha1($tmpStr);
         
-        if ($tmpStr == $signature) {
-            return $echostr;
+        Log::info('WeChat server validation in plain text mode', [
+            'signature_match' => $hashCode === $signature
+        ]);
+        
+        if ($hashCode === $signature) {
+            return response($echostr, 200)->header('Content-Type', 'text/plain');
         } else {
-            return 'Invalid signature';
+            Log::error('WeChat server validation failed: invalid signature');
+            return response('Invalid signature', 403);
         }
     }
     
     /**
      * 处理微信消息
+     * 使用明文模式处理，不进行加密解密
      */
     public function handleMessage(Request $request)
     {
         $xml = $request->getContent();
         $data = $this->parseXml($xml);
+        
+        // 明文模式，验证必要字段
+        if (!is_array($data) || !isset($data['MsgType'], $data['FromUserName'], $data['ToUserName'])) {
+            // 记录错误日志
+            Log::error('Invalid WeChat message format: ' . $xml);
+            
+            // 返回空响应
+            return '';
+        }
+        
+        Log::info('Processing WeChat message in plain text mode', [
+            'msg_type' => isset($data['MsgType']) ? $data['MsgType'] : 'unknown',
+            'from_user' => isset($data['FromUserName']) ? $data['FromUserName'] : 'unknown'
+        ]);
         
         // 获取消息类型和内容
         $msgType = $data['MsgType'];
@@ -69,9 +98,13 @@ class WeChatController extends Controller
             case 'event':
                 return $this->handleEventMessage($data, $fromUserName, $toUserName);
             default:
+                // 记录未处理的消息类型
+                Log::info('Unsupported WeChat message type: ' . $msgType);
                 return $this->responseText($toUserName, $fromUserName, '暂不支持该类型消息');
         }
     }
+    
+
     
     /**
      * 处理文本消息
@@ -198,6 +231,13 @@ class WeChatController extends Controller
      */
     public function getAccessToken()
     {
+        // 验证appSecret是否已配置
+        $this->appSecret = env('WECHAT_APPSECRET');
+        if (!$this->appSecret) {
+            Log::error('WeChat appSecret is not configured');
+            return null;
+        }
+        
         $cacheKey = 'wechat_access_token';
         
         // 尝试从缓存获取
