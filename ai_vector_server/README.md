@@ -11,6 +11,7 @@
 - 兼容OpenAI API格式的文本嵌入接口
 - 支持通过环境变量或命令行参数灵活配置
 - 自动保存数据（磁盘存储和Milvus模式下）
+- 内置本地备用向量生成机制，无需依赖外部Embedding API也能正常工作
 
 ## 快速开始
 
@@ -51,7 +52,7 @@ VECTOR_STORE_MILVUS_HOST=localhost
 VECTOR_STORE_MILVUS_PORT=19530
 VECTOR_STORE_MILVUS_COLLECTION=vectors
 
-# OpenAI API配置
+# OpenAI API配置（可选，系统提供本地备用向量生成机制）
 AI_API_KEY=sk-xxxxx
 AI_API_URL=https://api.openai.com/v1
 AI_MODEL=text-embedding-ada-002
@@ -132,3 +133,5 @@ Content-Type: application/json
 - 使用Milvus存储时，需要提前部署Milvus服务
 - 向量维度由第一个添加的向量决定，请确保所有向量使用相同的嵌入模型
 - 服务重启时，磁盘存储会自动加载之前保存的数据
+- 当无法连接外部Embedding API时，系统会自动使用本地备用向量生成机制（基于文本哈希和字符统计的128维向量）
+- 本地备用向量生成机制的准确度可能低于专业的Embedding API，但足以满足基本的相似性搜索需求

@@ -1,11 +1,11 @@
 # 家政 AI 知识库管理系统
 
 本系统包含 **三部分**：
-1. **Python FAISS 向量检索服务**（AI 知识库检索）
+1. **Python FAISS 向量检索服务**（AI 知识库检索，支持本地备用向量生成）
 2. **Laravel 后端 API**（业务逻辑 + 数据管理）
 3. **Vue3 前端**（用户 AI 问答界面 + 管理界面）
 
-目的是：管理员维护家政知识库，用户提问时 AI 根据知识库回答。
+目的是：管理员维护家政知识库，用户提问时 AI 根据知识库回答，提供专业的家政服务咨询。
 
 ---
 
@@ -23,9 +23,9 @@ homestaff-ai/
 
 - Python >= 3.9 (用于 ai_vector_server)
 - Node.js >= 16 (用于 Vue 前端)
-- PHP >= 8.0, Composer (用于 Laravel)
+- PHP >= 7.4, Composer (用于 Laravel)
 - MySQL >= 5.7 (存储知识库数据和聊天日志)
-- OpenAI API Key（需自行申请）
+- OpenAI API Key（可选，系统提供本地备用向量生成机制）
 
 ---
 
@@ -63,9 +63,16 @@ DB_DATABASE=homestaff
 DB_USERNAME=你的数据库用户名
 DB_PASSWORD=你的数据库密码
 
-AI_API_KEY=sk-xxxxxx  # 你的 OpenAI Key
+# AI配置
+AI_API_KEY=sk-xxxxxx  # 你的 OpenAI Key（可选）
 AI_API_URL=https://api.openai.com/v1
-```
+
+# 向量服务配置
+EMBEDDING_API_URL=http://localhost:9000
+
+# 系统模式和提示词（可自定义）
+SYSTEM_MODE=家政服务
+SYSTEM_PROMPT=你是一个专业的家政服务助手，负责为用户提供家政服务。
 
 初始化数据库：
 ```bash
@@ -85,8 +92,12 @@ php artisan serve --host=0.0.0.0 --port=8000
 
 后端 API 地址示例：
 - AI 问答：`POST /api/ai/ask`
+- 优化并添加知识：`POST /api/ai/optimize-and-add`
 - 知识列表：`GET /api/admin/knowledge`
 - 添加知识：`POST /api/admin/knowledge`
+- 更新知识：`POST /api/admin/knowledge/update`
+- 删除知识：`POST /api/admin/knowledge/delete`
+- 重新索引知识库：`POST /api/test/reindex-knowledge`（测试维护接口）
 
 ---
 
@@ -123,14 +134,20 @@ npm run dev
 2. 启动 Laravel 后端 API
 3. 启动 Vue 前端
 
+### 6. 知识库重新索引
+当向量存储出现问题时，可以使用以下命令重新索引所有知识库内容：
+```bash
+curl -X POST http://localhost:8000/api/test/reindex-knowledge -H "Content-Type: application/json"
+```
+
 ---
 
-### 6. 常见问题
+### 7. 常见问题
 Q: OpenAI Key 错误导致无法生成向量或回答？
-A: 检查 `.env` 中 `AI_API_KEY` 是否正确，并确认网络可访问 OpenAI API。
+A: 系统已实现本地备用向量生成机制，即使无法连接外部 API，也能正常工作。可通过日志查看具体错误。
 
 Q: 搜索不到知识？
-A: 检查是否已调用 `add-doc` 将知识入库，并确保 Python 服务在运行。
+A: 使用 `/api/test/reindex-knowledge` 接口重新索引所有知识库内容，确保向量存储正确初始化。
 
 Q: Vue 请求 500 或 404？
 A: 看 Laravel 后端日志 (`storage/logs/laravel.log`) 确认路由和参数是否正确。
@@ -141,12 +158,17 @@ A: 登录系统后，点击右上角用户名旁边的"修改密码"按钮进行
 Q: 如何创建多个管理员账户？
 A: 使用 `php artisan user:init` 命令并指定不同的邮箱和用户名。
 
+Q: 系统模式和提示词在哪里配置？
+A: 在后端的 `.env` 文件中，通过 `SYSTEM_MODE` 和 `SYSTEM_PROMPT` 环境变量进行配置。
+
 ---
 
 ## 作者提示
-- 可以在 Laravel 后端加用户登录，限制管理接口权限
-- Python FAISS 服务目前是内存型，重启会丢数据，可改用磁盘保存或 Milvus、Pinecone 等向量数据库
+- 系统已增加本地备用向量生成机制，即使无法连接 OpenAI API 也能正常工作
+- 增加了知识库重新索引测试接口，方便维护和故障排除
+- Python FAISS 服务支持多种存储方式，推荐使用磁盘存储以确保数据持久化
 - 部署到云服务器记得开放对应端口（8000, 9000, 5173）
+- 可通过 `.env` 文件自定义系统模式和提示词，实现不同领域的专业问答
 
 ---
 
