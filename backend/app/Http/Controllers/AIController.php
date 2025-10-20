@@ -28,7 +28,7 @@ class AIController extends Controller
             ->post(env('AI_API_URL') . '/chat/completions', [
                 'model' => env('AI_MODEL'),
                 'messages' => [
-                    ['role' => 'system', 'content' => '你是一个家政顾问AI，根据提供的知识库回答用户问题。'],
+                    ['role' => 'system', 'content' => env('SYSTEM_PROMPT') . '根据提供的知识库回答用户问题。'],
                     ['role' => 'user', 'content' => "已知资料:\n$context\n\n问题:$question"]
                 ]
             ])->json();
@@ -106,7 +106,7 @@ class AIController extends Controller
             'title' => $knowledgeData['title'],
             'content' => $knowledgeData['content'],
             'tags' => $knowledgeData['tags'] ?? [],
-            'category' => $knowledgeData['category'] ?? '家政服务'
+            'category' => $knowledgeData['category'] ?? env('SYSTEM_MODE')
         ]);
 
         // 添加到向量存储 - 修复URL格式错误
