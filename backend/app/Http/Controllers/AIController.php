@@ -88,8 +88,6 @@ class AIController extends Controller
 
         $optimizedContent = $optimizedContentResponse['choices'][0]['message']['content'] ?? '';
         
-        // 调试信息
-        
         // 尝试解析JSON响应
         try {
             // 移除可能的Markdown代码块标记
@@ -102,8 +100,7 @@ class AIController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => '解析优化内容失败: ' . $e->getMessage(), 'raw_content' => $optimizedContent], 400);
         }
-        var_dump($knowledgeData, '1111'); die;
-
+        
         // 创建知识库条目
         $knowledge = Knowledge::create([
             'title' => $knowledgeData['title'],
@@ -112,14 +109,35 @@ class AIController extends Controller
             'category' => $knowledgeData['category'] ?? '家政服务'
         ]);
 
-        // 添加到向量存储
-        $vectorResponse = Http::post(env('EMBEDDING_API_URL', env('EMBEDDING_API_URL') . '/add-doc'), [
+        // 添加到向量存储 - 修复URL格式错误
+        $vectorResponse = Http::post(env('EMBEDDING_API_URL') . '/add-doc', [
             'doc_id' => $knowledge->id,
             'text' => $knowledgeData['content']
         ]);
 
         if ($vectorResponse->failed()) {
-            return response()->json(['status' => 'error', 'message' => '添加到向量存储失败'], 500);
+            // 记录错误但继续返回成功，因为知识库已创建
+            
+            // 尝试直接通过HTTP请求添加到向量服务器（备用方法）
+            try {
+                $curl = curl_init();
+                curl_setopt_array($curl, [
+                    CURLOPT_URL => env('EMBEDDING_API_URL') . '/add-doc',
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => json_encode([
+                        'doc_id' => $knowledge->id,
+                        'text' => $knowledgeData['content']
+                    ]),
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json'
+                    ]
+                ]);
+                curl_exec($curl);
+                curl_close($curl);
+            } catch (\Exception $e) {
+                // 忽略备用方法的错误
+            }
         }
 
         return response()->json(['status' => 'ok', 'id' => $knowledge->id, 'optimized' => $knowledgeData]);

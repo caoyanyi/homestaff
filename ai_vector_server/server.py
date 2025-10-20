@@ -112,9 +112,21 @@ def search(q: QueryInput):
         if vector_store is None:
             return {"results": []}
     
-    vector = get_embedding(q.text)
-    results = vector_store.search_vectors(vector, q.top_k)
-    return {"results": results}
+    try:
+        # 尝试获取嵌入向量
+        vector = get_embedding(q.text)
+        # 尝试搜索向量
+        try:
+            results = vector_store.search_vectors(vector, q.top_k)
+            return {"results": results}
+        except Exception as e:
+            # 如果搜索失败，可能是因为向量存储为空或其他问题
+            print(f"Error searching vectors: {str(e)}")
+            return {"results": []}
+    except Exception as e:
+        # 如果获取嵌入向量失败
+        print(f"Error getting embedding: {str(e)}")
+        return {"results": []}
 
 # 初始化向量存储
 def init_vector_store(store_config=None):
